@@ -12,49 +12,44 @@ save(2276, [f'O<{c}' for c in b'Hello World!'] + ['Z<1'])
 save(2277, ['A<I', 'B<I', '[A]<48', '[B]<49', 'O<[A]', 'Z<1'])
 save(2278, [f'[{48+i}]<{48+(i+1)%10}' for i in range(10)]
      + ['A<I', 'O<[A]', 'Z<1'])
-save(2279, ['A<I', '[A]<0', '[0]<1', 'Z<[A]', 'O<A'])
+save(2279, ['[0]<1', 'A<I', 'O<A', 'Z<[A]'])
 
-# Reuse one lookup region for the three decimal positions.
-p = ['A<I']
-for position in (100, 10, 1):
-    for c in range(128):
-        value = 48 + (c // position) % 10 if c >= position or position == 1 else 0
-        if value or position != 100:
-            p.append(f'[{c}]<{value}')
-    p.append('O<[A]')
-save(2280, p + ['Z<1'])
+# The quotient table also supplies the complement needed for the remainder.
+p = [f'[{c}]<{128-10*(c//10)}' for c in range(128)]
+p += [f'[{128-10*q+140}]<49' for q in range(10,13)]
+p += [f'[{128-10*q+256}]<{48+q%10}' for q in range(1,13)]
+p += [f'[{128+i}]<{48+i}' for i in range(10)]
+p += ['A<I', 'B<[A]', 'O<[B+140]', 'O<[B+256]', 'O<[A+B]', 'Z<1']
+save(2280, p)
 
-# Addition is performed from right to left with a one-bit carry.
-p = [f'[{96+i}]<{i}' for i in range(19)]
-p += [f'[{i}]<{i}' for i in range(1, 20)]
+# Addition and output run in separate phases of a small state machine.
+p = [f'[{96+i}]<{i}' for i in range(1,19)]
 p += [f'[{128+i}]<{48+i%10}' for i in range(20)]
 p += [f'[{160+i}]<{i//10}' for i in range(10, 20)]
-digits = 'ABCDEFGHJK'
-p += [f'{r}<I' for r in digits] + ['M<I']
-p += [f'[{300+i}]<I' for i in range(10)]
-for i in reversed(range(10)):
-    p += [f'M<[{300+i}]', f'S<[{digits[i]}+M]', 'T<[S+L]',
-          f'[{300+i}]<[T+128]', 'L<[T+160]']
-# Suppress leading zeroes, but always print the units digit.
-p += ['[200]<0', '[201]<49', 'O<[L+200]', '[220]<1',
-      'N<[L+220]', '[0]<0', '[1]<0', '[2]<1', '[248]<1']
-for i in range(9):
-    p += [f'A<[{300+i}]', 'B<[A+200]', 'N<[N+B]',
-          '[400]<A', 'O<[N+400]']
-p += ['O<[309]', 'Z<1']
+p += ['[200]<128', '[201]<129', '[202]<160', '[203]<161']
+p += [f'[{220+i}]<{i+1}' for i in range(21)]
+p += ['[260]<153'] + [f'[{250+i}]<{144-i}' for i in range(11,21)]
+p += ['[510]<1', '[280]<0', '[281]<49']
+p += [f'[{i}]<{i}' for i in range(49,58)]
+p += [f'[P+{309-i}]<I' for i in range(10)] + ['A<I']
+p += [f'[P+{329-i}]<I' for i in range(10)] + ['P<40']
+p += ['A<[X+300]', 'B<[X+320]', 'S<[A+B]', 'L<[C+200]',
+      '[X+400]<[S+L]', 'L<[C+202]', 'C<[S+L]',
+      '[X+420]<[C+280]', 'Q<[X+250]', 'A<[Q+276]',
+      '[450]<48', '[N+450]<0', '[48]<[450]', '[X+28]<48', 'N<[A]',
+      'O<N', 'X<[X+220]', 'Z<[X+489]']
 save(2281, p)
 
 # Counting sort. EOF reads update only an unused dummy counter.
 p = [f'[{128+i}]<{max(0,i-1)}' for i in range(2, 6)]
 p += [f'[{140+i}]<{i+1}' for i in range(6)]
-p += [f'[{160+i}]<{48+i}' for i in range(10)]
-p += [f'[{180+i}]<{i+1}' for i in range(10)]
-p += ['[210]<1']
+p += ['[180]<48'] + [f'[{180+i}]<{i+1}' for i in range(48,58)]
+p += ['[458]<1']
 for _ in range(5):
-    p += ['A<I', 'B<[A]', '[A]<[B+140]']
-p += ['A<[D+48]', '[300]<[D+160]', '[A+300]<0', 'O<[300]',
-      '[D+48]<[A+128]', '[320]<D', '[A+320]<[D+180]',
-      'D<[320]', 'Z<[D+200]']
+    p += ['A<I', 'B<[A+256]', '[A+256]<[B+140]']
+p += ['A<[D+256]', '[350]<D', '[A+350]<0', 'O<[350]',
+      '[D+256]<[A+128]', '[370]<D', '[A+370]<[D+180]',
+      'D<[370]', 'Z<[D+400]']
 save(2282, p)
 
 # A binary increment selects the disk at the first zero bit. Disk positions
