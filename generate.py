@@ -23,21 +23,19 @@ p += ['A<I', 'B<[A]', 'O<[B+140]', 'O<[B+256]', 'O<[A+B]', 'Z<1']
 save(2280, p)
 
 # Addition and output run in separate phases of a small state machine.
-p = [f'[{96+i}]<{i}' for i in range(1,19)]
+p = [f'[{96+i}]<{i}' for i in range(1,21)]
 p += [f'[{128+i}]<{48+i%10}' for i in range(20)]
 p += [f'[{160+i}]<{i//10}' for i in range(10, 20)]
 p += ['[200]<128', '[201]<129', '[202]<160', '[203]<161']
-p += [f'[{220+i}]<{i+1}' for i in range(21)]
 p += ['[260]<153'] + [f'[{250+i}]<{144-i}' for i in range(11,21)]
-p += ['[510]<1', '[280]<0', '[281]<49']
 p += [f'[{i}]<{i}' for i in range(49,58)]
 p += [f'[P+{309-i}]<I' for i in range(10)] + ['A<I']
 p += [f'[P+{329-i}]<I' for i in range(10)] + ['P<40']
 p += ['A<[X+300]', 'B<[X+320]', 'S<[A+B]', 'L<[C+200]',
       '[X+400]<[S+L]', 'L<[C+202]', 'C<[S+L]',
-      '[X+420]<[C+280]', 'Q<[X+250]', 'A<[Q+276]',
+      '[X+420]<[C+48]', 'Q<[X+250]', 'A<[Q+276]',
       '[450]<48', '[N+450]<0', '[48]<[450]', '[X+28]<48', 'N<[A]',
-      'O<N', 'X<[X+220]', 'Z<[X+489]']
+      'O<N', 'Z<[X+77]', 'X<[X+97]']
 save(2281, p)
 
 # Counting sort. EOF reads update only an unused dummy counter.
